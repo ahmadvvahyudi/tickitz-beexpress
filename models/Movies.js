@@ -1,5 +1,6 @@
 const db = require("../helper/db_conn")
 const table = "movies"
+const id = 'id'
 
 const getAllMovies = async (req, res) => {
 	return new Promise((resolve, reject) => {
@@ -31,7 +32,7 @@ const getMoviesById = async (req, res) => {
 					reject({
 						succes: false,
 						status: 500,
-						message: "ada error",
+						message: "Internal Server Error",
 						data: err.code
 					})
 				} else if (results.length === 0) {
@@ -73,7 +74,12 @@ const addMovies = async (req, res) => {
 			`INSERT INTO ${table}(title, cover, release, director, description, casts, categories) VALUES ('${title}', '${cover}','${release_date}','${director}','${description}','${casts}','${categories}')`,
 			(err, results) => {
 				if (err) {
-					reject({ message: "ada error" })
+					reject({
+						success: false,
+						status: 500,
+						message: "Internal Server Error",
+						data: err.code
+					})
 				}
 				resolve({
 					message: "Add Movies Success",
@@ -91,52 +97,99 @@ const updateMovies = async (req, res) => {
 		const { id } = req.params
 		db.query(`SELECT * FROM ${table} WHERE id = ${id}`, (err, results) => {
 			if (err) {
-				res.send({ message: "ada error" })
-			}
-
-			const prevData = {
-				...results[0],
-				...req.body
-			}
-			const {
-				title,
-				cover,
-				release_date,
-				director,
-				description,
-				casts,
-				categories
-			} = prevData
-
-			db.query(
-				`UPDATE ${table} SET title='${title}', cover='${cover}', release='${release_date}', director='${director}', description='${description}', casts='${casts}', categories='${categories}'`,
-				(err, results) => {
-					if (err) {
-						reject({ message: "ada error" })
-					}
-					resolve({
-						message: "Update Movies Success",
-						status: 200,
-						data: results
-					})
+				reject({
+					success: false,
+					status: 500,
+					message: "Internal Server Error",
+					data: err.code
+				})
+			} else if (results.length === 0) {
+				reject({
+					success: false,
+					status: 400,
+					message: "Bad Request, data not found!"
+				})
+			} else {
+				const prevData = {
+					...results[0],
+					...req.body
 				}
-			)
+				const {
+					title,
+					cover,
+					release_date,
+					director,
+					description,
+					casts,
+					categories
+				} = prevData
+
+				db.query(
+					`UPDATE ${table} SET title='${title}', cover='${cover}', release='${release_date}', director='${director}', description='${description}', casts='${casts}', categories='${categories}'`,
+					(err, results) => {
+						if (err) {
+							reject({
+								success: false,
+								status: 500,
+								message: "Internal Server Error",
+								data: err.code
+							})
+						}
+						resolve({
+							success: true,
+							message: "Update Movies Success",
+							status: 200,
+							data: {
+								id: req.params.id
+							}
+						})
+					}
+				)
+			}
 		})
 	})
 }
 const removeMovies = async (req, res) => {
 	return new Promise((resolve, reject) => {
-		const { id } = req.params
-		db.query(`DELETE FROM ${table} WHERE id = ${id}`, (err, results) => {
-			if (err) {
-				reject({ message: "ada error" })
+		db.query(
+			`SELECT ${id} from ${table} where ${id}=${req.params.id}`,
+			(err, results) => {
+				if (err) {
+					reject({
+						success: false,
+						status: 500,
+						message: "Internal Server Error",
+						data: err.code
+					})
+				} else if (results.length === 0) {
+					reject({
+						success: false,
+						status: 400,
+						message: "Bad Request, data not found!"
+					})
+				} else {
+					db.query(`DELETE FROM ${table} WHERE ${id} = ${req.params.id}`, (err, results) => {
+						if (err) {
+							reject({
+								success: false,
+								status: 500,
+								message: "Internal Server Error",
+								data: err.code
+							})
+						} else {
+							resolve({
+								success: true,
+								status: 200,
+								message: "Delete Movies Success",
+								data: {
+									id: req.params.id
+								}
+							})
+						}
+					})
+				}
 			}
-			resolve.send({
-				message: "Delete Movies Success",
-				status: 200,
-				data: results
-			})
-		})
+		)
 	})
 }
 
@@ -150,7 +203,7 @@ const searchMovies = async (req, res) => {
 					reject({
 						succes: false,
 						status: 500,
-						message: "ada error",
+						message: "Internal Server Error",
 						data: {
 							code: err.code
 						}
@@ -212,5 +265,5 @@ module.exports = {
 	updateMovies,
 	removeMovies,
 	searchMovies,
-    sortMovies
+	sortMovies
 }
