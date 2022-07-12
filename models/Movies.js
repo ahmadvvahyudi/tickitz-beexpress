@@ -1,8 +1,8 @@
 const db = require("../helper/db_conn")
 const table = "movies"
-const id = 'id'
+const id = "id_movie"
 
-const getAllMovies = async (req, res) => {
+const getAll = async (req, res) => {
 	return new Promise((resolve, reject) => {
 		const { title = "", director = "" } = req.query
 		const sql = `SELECT * FROM ${table} ${
@@ -23,10 +23,10 @@ const getAllMovies = async (req, res) => {
 	})
 }
 
-const getMoviesById = async (req, res) => {
+const getById = async (req, res) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT * FROM ${table} WHERE id =${req.params.id}`,
+			`SELECT * FROM ${table} WHERE id_movie =${req.params.id}`,
 			(err, results) => {
 				if (err) {
 					reject({
@@ -59,19 +59,35 @@ const getMoviesById = async (req, res) => {
 	})
 }
 
-const addMovies = async (req, res) => {
+const add = async (req, res) => {
 	return new Promise((resolve, reject) => {
-		const {
-			title,
-			cover,
-			release_date,
-			director,
-			description,
-			casts,
-			categories
-		} = req.body
+		const {title, genre, release_date, directed_by, duration, cast, synopsis, image} = req.body
+		db.query(`INSERT INTO ${table}(title, genre, release_date, directed_by, duration, cast, synopsis, image) VALUES ('${title}', '${genre}','${release_date}','${directed_by}','${duration}','${cast}','${synopsis},'${image}')`,
+		(err, results) => {
+				console.log(req.body, "reaq")
+				if (err) {
+					reject({
+						success: false,
+						status: 500,
+						message: "Internal Server Error",
+						data: { code: err.code }
+					})
+				}
+				resolve({
+					success: true,
+					message: "Add Movies Success",
+					status: 200,
+					data: results
+				})
+			}
+		)
+	})
+}
+const update = async (req, res) => {
+	return new Promise((resolve, reject) => {
+		const { id } = req.params
 		db.query(
-			`INSERT INTO ${table}(title, cover, release, director, description, casts, categories) VALUES ('${title}', '${cover}','${release_date}','${director}','${description}','${casts}','${categories}')`,
+			`SELECT * FROM ${table} WHERE id_movie = ${id}`,
 			(err, results) => {
 				if (err) {
 					reject({
@@ -80,76 +96,55 @@ const addMovies = async (req, res) => {
 						message: "Internal Server Error",
 						data: err.code
 					})
-				}
-				resolve({
-					message: "Add Movies Success",
-					status: 200,
-					data: {
+				} else if (results.length === 0) {
+					reject({
+						success: false,
+						status: 400,
+						message: "Bad Request, data not found!"
+					})
+				} else {
+					const prevData = {
+						...results[0],
 						...req.body
 					}
-				})
+					const {
+						title,
+						genre,
+						release_date,
+						directed_by,
+						duration,
+						cast,
+						synopsis,
+						image
+					} = prevData
+
+					db.query(
+						`UPDATE ${table} SET title='${title}', genre='${genre}', release_date='${release_date}', directed_by='${directed_by}', duration='${duration}', cast='${cast}', synopsis='${synopsis}', image ='${image}'`,
+						(err, results) => {
+							if (err) {
+								reject({
+									success: false,
+									status: 500,
+									message: "Internal Server Error",
+									data: err.code
+								})
+							}
+							resolve({
+								success: true,
+								message: "Update Movies Success",
+								status: 200,
+								data: {
+									id: req.params.id
+								}
+							})
+						}
+					)
+				}
 			}
 		)
 	})
 }
-const updateMovies = async (req, res) => {
-	return new Promise((resolve, reject) => {
-		const { id } = req.params
-		db.query(`SELECT * FROM ${table} WHERE id = ${id}`, (err, results) => {
-			if (err) {
-				reject({
-					success: false,
-					status: 500,
-					message: "Internal Server Error",
-					data: err.code
-				})
-			} else if (results.length === 0) {
-				reject({
-					success: false,
-					status: 400,
-					message: "Bad Request, data not found!"
-				})
-			} else {
-				const prevData = {
-					...results[0],
-					...req.body
-				}
-				const {
-					title,
-					cover,
-					release_date,
-					director,
-					description,
-					casts,
-					categories
-				} = prevData
-
-				db.query(
-					`UPDATE ${table} SET title='${title}', cover='${cover}', release='${release_date}', director='${director}', description='${description}', casts='${casts}', categories='${categories}'`,
-					(err, results) => {
-						if (err) {
-							reject({
-								success: false,
-								status: 500,
-								message: "Internal Server Error",
-								data: err.code
-							})
-						}
-						resolve({
-							success: true,
-							message: "Update Movies Success",
-							status: 200,
-							data: {
-								id: req.params.id
-							}
-						})
-					}
-				)
-			}
-		})
-	})
-}
-const removeMovies = async (req, res) => {
+const remove = async (req, res) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`SELECT ${id} from ${table} where ${id}=${req.params.id}`,
@@ -168,32 +163,35 @@ const removeMovies = async (req, res) => {
 						message: "Bad Request, data not found!"
 					})
 				} else {
-					db.query(`DELETE FROM ${table} WHERE ${id} = ${req.params.id}`, (err, results) => {
-						if (err) {
-							reject({
-								success: false,
-								status: 500,
-								message: "Internal Server Error",
-								data: err.code
-							})
-						} else {
-							resolve({
-								success: true,
-								status: 200,
-								message: "Delete Movies Success",
-								data: {
-									id: req.params.id
-								}
-							})
+					db.query(
+						`DELETE FROM ${table} WHERE ${id} = ${req.params.id}`,
+						(err, results) => {
+							if (err) {
+								reject({
+									success: false,
+									status: 500,
+									message: "Internal Server Error",
+									data: err.code
+								})
+							} else {
+								resolve({
+									success: true,
+									status: 200,
+									message: "Delete Movies Success",
+									data: {
+										id: req.params.id
+									}
+								})
+							}
 						}
-					})
+					)
 				}
 			}
 		)
 	})
 }
 
-const searchMovies = async (req, res) => {
+const search = async (req, res) => {
 	return new Promise((resolve, reject) => {
 		const { title } = req.body
 		db.query(
@@ -227,7 +225,7 @@ const searchMovies = async (req, res) => {
 	})
 }
 
-const sortMovies = async (req, res) => {
+const sort = async (req, res) => {
 	return new Promise((resolve, reject) => {
 		const { sort } = req.params.toLowerCase()
 		let querySort = { sort } != "asc" && { sort } != "desc" ? "asc" : { sort }
@@ -259,11 +257,11 @@ const sortMovies = async (req, res) => {
 	})
 }
 module.exports = {
-	getAllMovies,
-	getMoviesById,
-	addMovies,
-	updateMovies,
-	removeMovies,
-	searchMovies,
-	sortMovies
+	getAll,
+	getById,
+	add,
+	update,
+	remove,
+	search,
+	sort
 }
