@@ -4,7 +4,11 @@ const bodyParser = require("body-parser")
 const cors = require("cors")
 const path = require("path")
 const app = express()
+<<<<<<< HEAD
 const port = process.env.PORT || 4000
+=======
+const port = process.env.PORT || 5000
+>>>>>>> b6008648da60fea951efadf710f5c8d4828c4c96
 const router = require("./routes")
 app.use(cors())
 
