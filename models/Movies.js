@@ -61,26 +61,37 @@ const getById = async (req, res) => {
 
 const add = async (req, res) => {
 	return new Promise((resolve, reject) => {
-		const {title, genre, release_date, directed_by, duration, cast, synopsis, image} = req.body
-		db.query(`INSERT INTO ${table}(title, genre, release_date, directed_by, duration, cast, synopsis, image) VALUES ('${title}', '${genre}','${release_date}','${directed_by}','${duration}','${cast}','${synopsis},'${image}')`,
-		(err, results) => {
+		const {
+			title,
+			genre,
+			release_date,
+			directed_by,
+			duration,
+			cast,
+			synopsis,
+			image
+		} = req.body
+		console.log(req.body)
+		db.query(
+			`INSERT INTO ${table} (title, genre, release_date, directed_by, duration, cast, synopsis, image) VALUES ('${title}', '${genre}','${release_date}','${directed_by}','${duration}','${cast}','${synopsis}','${image}')`,
+			(err, results) => {
 				console.log(req.body, "reaq")
 				if (err) {
 					reject({
 						success: false,
 						status: 500,
 						message: "Internal Server Error",
-						data: { code: err.code }
+						data: err
 					})
-				}
+				} else {
 				resolve({
 					success: true,
 					message: "Add Movies Success",
 					status: 200,
-					data: results
+					data: results 
 				})
 			}
-		)
+	})
 	})
 }
 const update = async (req, res) => {

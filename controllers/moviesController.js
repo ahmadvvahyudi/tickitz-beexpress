@@ -1,8 +1,9 @@
-const {getAll, getById, add, update, remove, search, sort} = require("../models/Movies")
+// 
+const Movies = require ("../models/Movies")
 
 const getAllMovies = async (req, res) => {
 	try {
-		const results = await getAll(req, res)
+		const results = await Movies.getAll(req, res)
 		res.status(200).send(results)
 	} catch (error) {
 		res.status(500).send(error)
@@ -11,7 +12,7 @@ const getAllMovies = async (req, res) => {
 
 const getMoviesById = async (req, res) => {
 	try {
-		const results = await getById(req, res)
+		const results = await Movies.getById(req, res)
 		res.status(200).send(results)
 	} catch (error) {
 		if (error.status === 400) {
@@ -24,11 +25,13 @@ const getMoviesById = async (req, res) => {
 
 const addMovies = async (req, res) => {
     try {
+        console.log(req.body)
+        console.log(req.file)
         const reqModified={
             ...req,
             body: {...req.body, image: req.file.filename}
         }
-        const results = await add(reqModified, res)
+        const results = await Movies.add(reqModified, res)
         res.status(200).send(results)
     } catch (error) {
         res.status(500).send(error)
@@ -37,7 +40,7 @@ const addMovies = async (req, res) => {
 
 const updateMovies = async (req, res) => {
     try {
-        const results = await update(req, res)
+        const results = await Movies.update(req, res)
         res.status(200).send(results)
     } catch (error) {
         if (error.status === 400) {
@@ -50,7 +53,7 @@ const updateMovies = async (req, res) => {
 
 const removeMovies = async (req, res) => {
     try {
-        const results = await remove(req, res)
+        const results = await Movies.remove(req, res)
         res.status(200).send(results)
     } catch (error) {
         if (error.status === 400) {
@@ -63,7 +66,7 @@ const removeMovies = async (req, res) => {
 
 const searchMovies = async (req, res) => {
     try {
-        const results = await search(req, res)
+        const results = await Movies.search(req, res)
         res.status(200).send(results)
     } catch (error) {
         if (error.status === 400) {
@@ -76,7 +79,7 @@ const searchMovies = async (req, res) => {
 
 const sortMovies = async (req, res) => {
     try {
-        const results = await sort(req, res)
+        const results = await Movies.sort(req, res)
         res.status(200).send(results)
     } catch (error) {
         res.status(500).send(error)
